@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { supabase } from "./supabaseClient";
 import './App.css';
-import { Container } from "@mui/material";
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
@@ -13,6 +12,7 @@ import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
+import { hover } from "@testing-library/user-event/dist/hover";
 
 const myTheme = createTheme({
   palette: {
@@ -39,7 +39,7 @@ const myTheme = createTheme({
 function ButtonAppBar() {
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <AppBar sx={{ backgroundColor: "primary.main" }} position="static">
+      <AppBar sx={{ backgroundColor: "primary.main" }} position="sticky">
         <Toolbar >
           <Typography variant="h5" component="div" sx={{ flexGrow: 1 }}>
             Course Tracker
@@ -51,6 +51,49 @@ function ButtonAppBar() {
 }
 
 function Content() {
+  const [mySemesters, setMySemesters] = useState([]);
+  const [myCourses, setMyCourses] = useState([]);
+  const [clickedSemester, setClickedSemester] = useState(0);
+  
+
+  async function getSemesters() {
+    let { data: semesters, error} = await supabase
+      .from("semesters")
+      .select("*");
+    
+    if (error) {
+      console.log(error);
+    } else {
+      setMySemesters(semesters);
+    }
+  }
+  
+  async function getCourses() {
+      let { data: courses, error} = await supabase
+      .from("courses")
+      .select("*");
+
+      if (error) {
+      } else {
+        setMyCourses(courses);
+        const totalCredits = courses.reduce(
+          (accumulator, currentValue) => accumulator + currentValue.course_credits,
+          0
+        );
+      }
+  }
+
+  function handleClick(sem_id) {
+    if (clickedSemester === sem_id) {
+      setClickedSemester(0);
+    } else {
+      setClickedSemester(sem_id);
+    }
+  }
+
+  getSemesters();
+  getCourses();
+
   return (
     <Box sx={{ gridGap: 5, display: 'flex', padding: 5}}>
       <Box sx={{ borderRadius: 2, padding: 1, flex: 1, backgroundColor: "special.main" }}>
@@ -58,20 +101,22 @@ function Content() {
           Semesters
         </Typography>
         <List>
-          <ListItem disablePadding>
-            <ListItemButton>
-              <ListItemText primary="Trash" />
-            </ListItemButton>
-          </ListItem>
-          <ListItem disablePadding>
-            <ListItemButton component="a" href="#simple-list">
-              <ListItemText primary="Spam" />
-            </ListItemButton>
-          </ListItem>
+          {
+            mySemesters.map(s => (
+              <ListItem >
+                {clickedSemester === s.id ? 
+                <ListItemButton sx={{ backgroundColor: "action.main", border: "solid", borderColor: "action.main", borderWidth: 1.5, borderRadius: 1, }} onClick={() => handleClick(s.id)}>
+                  <ListItemText primary={s.semester_name} />
+                </ListItemButton> : 
+                <ListItemButton sx={{ border: "solid", borderColor: "action.main", borderWidth: 1.5, borderRadius: 1, }} onClick={() => handleClick(s.id)}>
+                  <ListItemText primary={s.semester_name} />
+                </ListItemButton>
+              } 
+                
+              </ListItem>
+            ))
+          }
         </List>
-        <Typography variant="h6" component="div" sx={{ fontSize: 14, flexGrow: 1 }}>
-          Total Semesters: 0
-        </Typography>
       </Box>
 
       <Box sx={{borderRadius: 2, padding: 1, flex: 1, backgroundColor: "special.main"}}>
@@ -79,28 +124,28 @@ function Content() {
           Courses
         </Typography>
         <List>
-          <ListItem disablePadding>
-            <ListItemButton>
-              <ListItemText primary="Trash" />
-            </ListItemButton>
-          </ListItem>
-          <ListItem disablePadding>
-            <ListItemButton component="a" href="#simple-list">
-              <ListItemText primary="Spam" />
-            </ListItemButton>
-          </ListItem>
+        {
+            myCourses.filter(c => {
+              if (clickedSemester === 0 ) return true;
+
+              if (c.semester_id === clickedSemester) return true;
+
+              return false;
+            }).map(c => (
+              <ListItem disablePadding>
+                
+                  <ListItemText primary={c.course_name} secondary={"Credits: "+c.course_credits}/>
+                
+              </ListItem>
+            ))
+          }
         </List>
-        <Typography variant="h6" component="div" sx={{ fontSize: 14, flexGrow: 1 }}>
-          Total Credits: 0
-        </Typography>
       </Box>
     </Box>
   );
 }
 
 function App() {
-  const theme = useTheme();
-
   return (
     <ThemeProvider theme={myTheme}>
       <div>
