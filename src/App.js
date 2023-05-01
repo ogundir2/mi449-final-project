@@ -6,13 +6,11 @@ import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import { createTheme } from '@mui/material/styles';
-import { useTheme } from "@emotion/react";
 import { ThemeProvider } from "@emotion/react";
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
-import { hover } from "@testing-library/user-event/dist/hover";
 
 const myTheme = createTheme({
   palette: {
@@ -76,10 +74,6 @@ function Content() {
       if (error) {
       } else {
         setMyCourses(courses);
-        const totalCredits = courses.reduce(
-          (accumulator, currentValue) => accumulator + currentValue.course_credits,
-          0
-        );
       }
   }
 
